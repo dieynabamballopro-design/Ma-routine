@@ -1,0 +1,617 @@
+bash
+
+cat /mnt/user-data/outputs/routine_prise_de_parole.html
+Sortie
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ma Routine — Prise de Parole</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F7F5F2;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+  .header {
+    background: #1a1a1a;
+    color: white;
+    padding: 48px 20px 20px;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .header-sub { font-size: 13px; color: #999; margin-bottom: 16px; }
+
+  /* Streak + score row */
+  .stats-row {
+    background: #1a1a1a;
+    padding: 0 20px 20px;
+    display: flex;
+    gap: 10px;
+  }
+  .stat-pill {
+    flex: 1;
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #C5E8A0;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .stat-label { font-size: 10px; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Progress bar */
+  .progress-bar-wrap { background: #1a1a1a; padding: 0 20px 20px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px; }
+  .progress-track { height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #C5E8A0; border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+
+  /* Nav */
+  .nav { display: flex; background: white; border-bottom: 1px solid #EBEBEB; position: sticky; top: 0; z-index: 10; }
+  .nav-btn { flex: 1; padding: 14px 4px; font-size: 11px; font-weight: 500; color: #999; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .nav-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+
+  .content { padding: 16px; display: none; }
+  .content.active { display: block; }
+
+  .day-pill { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #888; margin-bottom: 10px; margin-top: 20px; }
+  .day-pill:first-of-type { margin-top: 8px; }
+
+  .ex-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; transition: opacity 0.2s; }
+  .ex-card.done { opacity: 0.45; }
+  .check-circle { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #DDD; background: transparent; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+  .check-circle.checked { background: #3DBF8C; border-color: #3DBF8C; }
+  .check-circle.checked::after { content: ''; width: 6px; height: 10px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); display: block; }
+  .ex-body { flex: 1; }
+  .ex-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+  .ex-desc { font-size: 13px; color: #666; line-height: 1.55; margin-bottom: 8px; }
+  .ex-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+  .tag-green { background: #E6F9EF; color: #1A7A4A; }
+  .tag-purple { background: #EEF0FD; color: #4B52C9; }
+  .tag-orange { background: #FEF0E7; color: #B85C1A; }
+  .tag-blue { background: #E6F2FD; color: #1A62A8; }
+
+  .tip { background: #FFFBE6; border-left: 3px solid #F5C842; border-radius: 0 12px 12px 0; padding: 12px 14px; font-size: 13px; color: #5C4A00; line-height: 1.55; margin-bottom: 16px; }
+
+  /* Chart tab */
+  .chart-card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: #999; margin-bottom: 16px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; background: #E0F0FF; transition: height 0.5s ease; min-height: 4px; position: relative; }
+  .bar.filled { background: #3DBF8C; }
+  .bar.today { background: #C5E8A0; outline: 2px solid #3DBF8C; }
+  .bar-label { font-size: 10px; color: #BBB; font-weight: 500; }
+  .bar-pct { font-size: 9px; color: #999; }
+
+  .streak-card { background: #1a1a1a; border-radius: 16px; padding: 20px; margin-bottom: 12px; color: white; display: flex; align-items: center; gap: 16px; }
+  .streak-fire { font-size: 40px; line-height: 1; }
+  .streak-big { font-size: 32px; font-weight: 700; color: #C5E8A0; }
+  .streak-text { font-size: 13px; color: #AAA; margin-top: 2px; }
+
+  .week-dots { display: flex; gap: 8px; margin-top: 12px; }
+  .dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .dot-done { background: #3DBF8C; color: white; }
+  .dot-today { background: #C5E8A0; color: #1a1a1a; outline: 2px solid #3DBF8C; }
+  .dot-miss { background: #F0F0F0; color: #CCC; }
+  .dot-future { background: #F7F5F2; color: #DDD; border: 1px dashed #DDD; }
+
+  /* Memoir */
+  .step-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: #1a1a1a; color: white; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-num.done-step { background: #3DBF8C; }
+  .step-body { flex: 1; }
+  .step-title { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .step-when { font-size: 11px; color: #3DBF8C; font-weight: 600; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: #666; line-height: 1.55; }
+  .step-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #DDD; background: transparent; cursor: pointer; flex-shrink: 0; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+  .step-check.checked { background: #3DBF8C; border-color: #3DBF8C; }
+
+  .ex-big-card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .ex-big-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .ex-big-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .ex-big-desc { font-size: 13px; color: #666; line-height: 1.6; }
+  .freq-badge { display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: #F0F0F0; color: #555; }
+
+  .today-banner { background: #1a1a1a; color: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .today-dot { width: 8px; height: 8px; border-radius: 50%; background: #C5E8A0; flex-shrink: 0; }
+  .today-text { font-size: 13px; font-weight: 500; }
+  .today-day { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .bottom-cta { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: white; border-top: 1px solid #EBEBEB; }
+  .cta-btn { width: 100%; padding: 16px; background: #1a1a1a; color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  .section-label { font-size: 11px; font-weight: 600; color: #AAA; letter-spacing: 0.08em; text-transform: uppercase; margin: 20px 0 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Mon programme</div>
+  <div class="header-title">Prise de parole<br>& Mémoire</div>
+  <div class="header-sub">15 min par jour · Marketing / Communication</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-pill">
+    <div class="stat-num" id="streak-num">0</div>
+    <div class="stat-label">🔥 Jours streak</div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-num" id="total-days-num">0</div>
+    <div class="stat-label">Jours complétés</div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-num" id="best-streak-num">0</div>
+    <div class="stat-label">Meilleur streak</div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-label">
+    <span id="progress-text">0 exercice fait aujourd'hui</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('semaine', this)">Semaine</button>
+  <button class="nav-btn" onclick="switchTab('exercices', this)">Exercices</button>
+  <button class="nav-btn" onclick="switchTab('evolution', this)">Évolution</button>
+  <button class="nav-btn" onclick="switchTab('memoire', this)">Mémoire</button>
+</nav>
+
+<!-- TAB SEMAINE -->
+<div class="content active" id="tab-semaine">
+  <div class="today-banner">
+    <div class="today-dot"></div>
+    <div>
+      <div class="today-text" id="today-label">Chargement...</div>
+      <div class="today-day" id="today-date"></div>
+    </div>
+  </div>
+  <div class="tip">💡 Coche chaque exercice après l'avoir fait. Tes données sont sauvegardées automatiquement.</div>
+
+  <div class="day-pill">Lundi — Structurer ses idées</div>
+  <div class="ex-card" id="ex1">
+    <button class="check-circle" onclick="toggleEx('ex1', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">La règle des 3 points</div>
+      <div class="ex-desc">Choisis un sujet (ex : "le marketing digital"). Parle 2 min avec EXACTEMENT 3 arguments. Note-les avant de parler.</div>
+      <div class="ex-meta"><span class="tag tag-green">15 min</span><span class="tag tag-blue">Structure</span></div>
+    </div>
+  </div>
+
+  <div class="day-pill">Mardi — Mémoire</div>
+  <div class="ex-card" id="ex2">
+    <button class="check-circle" onclick="toggleEx('ex2', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">Rédaction libre 10 min</div>
+      <div class="ex-desc">Écris SANS te corriger. Juste poser tes idées sur ton sujet de mémoire. Pas de pression de forme.</div>
+      <div class="ex-meta"><span class="tag tag-green">10 min</span><span class="tag tag-purple">Mémoire</span></div>
+    </div>
+  </div>
+  <div class="ex-card" id="ex3">
+    <button class="check-circle" onclick="toggleEx('ex3', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">1 question de recherche</div>
+      <div class="ex-desc">Formule 1 question centrale. Ex : "En quoi le digital impacte la fidélisation client ?"</div>
+      <div class="ex-meta"><span class="tag tag-green">5 min</span><span class="tag tag-purple">Mémoire</span></div>
+    </div>
+  </div>
+
+  <div class="day-pill">Mercredi — Voix & présence</div>
+  <div class="ex-card" id="ex4">
+    <button class="check-circle" onclick="toggleEx('ex4', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">L'enregistrement express</div>
+      <div class="ex-desc">Enregistre-toi 2 min sur "Parle-moi de toi professionnellement". Réécoute et note 1 seule chose à améliorer.</div>
+      <div class="ex-meta"><span class="tag tag-green">15 min</span><span class="tag tag-orange">Voix</span></div>
+    </div>
+  </div>
+
+  <div class="day-pill">Jeudi — Mémoire</div>
+  <div class="ex-card" id="ex5">
+    <button class="check-circle" onclick="toggleEx('ex5', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">Lire 1 article lié à ton sujet</div>
+      <div class="ex-desc">Résume-le en 3 phrases dans un carnet. Tu construis ta bibliographie sans t'en rendre compte.</div>
+      <div class="ex-meta"><span class="tag tag-green">15 min</span><span class="tag tag-purple">Mémoire</span></div>
+    </div>
+  </div>
+
+  <div class="day-pill">Vendredi — Structurer à l'oral</div>
+  <div class="ex-card" id="ex6">
+    <button class="check-circle" onclick="toggleEx('ex6', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">La méthode PREP</div>
+      <div class="ex-desc">Prends une question ("Pourquoi ce secteur ?"). Réponds en PREP : Point → Raison → Exemple → Point. 2 min chrono.</div>
+      <div class="ex-meta"><span class="tag tag-green">15 min</span><span class="tag tag-blue">Structure</span></div>
+    </div>
+  </div>
+
+  <div class="day-pill">Weekend — Pitch de soutenance</div>
+  <div class="ex-card" id="ex7">
+    <button class="check-circle" onclick="toggleEx('ex7', this)" aria-label="Cocher"></button>
+    <div class="ex-body">
+      <div class="ex-name">Pitch de soutenance 1 min</div>
+      <div class="ex-desc">Réponds à voix haute : "C'est quoi ton mémoire en 1 minute ?" Chronomètre-toi. Refais jusqu'à tenir le temps.</div>
+      <div class="ex-meta"><span class="tag tag-green">15 min</span><span class="tag tag-orange">Soutenance</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB EXERCICES -->
+<div class="content" id="tab-exercices">
+  <div class="tip">Ces 4 exercices sont tes piliers. Maîtrise-les et tu verras la différence en 3 semaines.</div>
+  <div class="ex-big-card">
+    <span class="ex-big-icon">⚡</span>
+    <div class="ex-big-title">La règle des 3</div>
+    <div class="ex-big-desc">Avant de prendre la parole sur n'importe quel sujet, pose-toi : "Mes 3 points sont ?" C'est la base de toute présentation claire.</div>
+    <span class="freq-badge">Tous les jours</span>
+  </div>
+  <div class="ex-big-card">
+    <span class="ex-big-icon">🎯</span>
+    <div class="ex-big-title">Méthode PREP</div>
+    <div class="ex-big-desc">Structure parfaite pour répondre en réunion, entretien ou soutenance.<br><br><strong>P</strong>oint — ta position en 1 phrase<br><strong>R</strong>aison — pourquoi tu le penses<br><strong>E</strong>xemple — une illustration concrète<br><strong>P</strong>oint — conclus en rappelant ta position</div>
+    <span class="freq-badge">2× par semaine</span>
+  </div>
+  <div class="ex-big-card">
+    <span class="ex-big-icon">🎙️</span>
+    <div class="ex-big-title">Se ré-écouter</div>
+    <div class="ex-big-desc">Enregistre 2 min. Écoute. Note juste 1 chose à changer — pas plus. Progresser vite = cibler petit.</div>
+    <span class="freq-badge">1× par semaine</span>
+  </div>
+  <div class="ex-big-card">
+    <span class="ex-big-icon">🏃</span>
+    <div class="ex-big-title">Le mot interdit</div>
+    <div class="ex-big-desc">Parle 1 min SANS dire "euh", "voilà" ou "donc". Dès que tu le dis, tu recommences. Booste la fluidité naturellement.</div>
+    <span class="freq-badge">Quand tu veux · 5 min</span>
+  </div>
+</div>
+
+<!-- TAB EVOLUTION -->
+<div class="content" id="tab-evolution">
+
+  <div class="streak-card">
+    <div class="streak-fire">🔥</div>
+    <div>
+      <div class="streak-big" id="streak-big">0</div>
+      <div class="streak-text">jours consécutifs</div>
+      <div class="streak-text" id="streak-msg" style="margin-top:4px; color:#C5E8A0; font-size:12px;"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Cette semaine</div>
+  <div class="chart-card">
+    <div class="week-dots" id="week-dots"></div>
+  </div>
+
+  <div class="section-label">Les 8 dernières semaines</div>
+  <div class="chart-card">
+    <div class="chart-sub">% d'exercices complétés par semaine</div>
+    <div class="bar-chart" id="weekly-chart"></div>
+  </div>
+
+  <div class="section-label">Statistiques</div>
+  <div class="chart-card">
+    <div style="display:flex; gap:12px;">
+      <div style="flex:1; text-align:center;">
+        <div style="font-size:24px; font-weight:700; color:#3DBF8C;" id="stat-total">0</div>
+        <div style="font-size:11px; color:#999; margin-top:3px;">Jours complétés</div>
+      </div>
+      <div style="flex:1; text-align:center;">
+        <div style="font-size:24px; font-weight:700; color:#3DBF8C;" id="stat-best">0</div>
+        <div style="font-size:11px; color:#999; margin-top:3px;">Meilleur streak</div>
+      </div>
+      <div style="flex:1; text-align:center;">
+        <div style="font-size:24px; font-weight:700; color:#3DBF8C;" id="stat-rate">0%</div>
+        <div style="font-size:11px; color:#999; margin-top:3px;">Taux de réussite</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB MEMOIRE -->
+<div class="content" id="tab-memoire">
+  <div class="tip">Sans encadreur, tu es ta propre chef de projet. Une étape à la fois.</div>
+  <div class="step-card">
+    <button class="step-check" id="sc1" onclick="toggleStep('sc1',1)" aria-label="Marquer comme fait"></button>
+    <div class="step-num" id="sn1">1</div>
+    <div class="step-body">
+      <div class="step-title">Choisir ton sujet précis</div>
+      <div class="step-when">Cette semaine</div>
+      <div class="step-desc">Plus c'est précis, plus c'est fort. Ex : "L'impact des réseaux sociaux sur la fidélisation client dans le retail."</div>
+    </div>
+  </div>
+  <div class="step-card">
+    <button class="step-check" id="sc2" onclick="toggleStep('sc2',2)" aria-label="Marquer comme fait"></button>
+    <div class="step-num" id="sn2">2</div>
+    <div class="step-body">
+      <div class="step-title">Formuler ta problématique</div>
+      <div class="step-when">Semaine 2</div>
+      <div class="step-desc">1 question centrale à laquelle tout ton mémoire répond. Tout ton plan en découle.</div>
+    </div>
+  </div>
+  <div class="step-card">
+    <button class="step-check" id="sc3" onclick="toggleStep('sc3',3)" aria-label="Marquer comme fait"></button>
+    <div class="step-num" id="sn3">3</div>
+    <div class="step-body">
+      <div class="step-title">Construire ton plan en 2 parties</div>
+      <div class="step-when">Semaine 3</div>
+      <div class="step-desc">Partie 1 = cadre théorique. Partie 2 = étude terrain. Structure classique valorisée par les jurys.</div>
+    </div>
+  </div>
+  <div class="step-card">
+    <button class="step-check" id="sc4" onclick="toggleStep('sc4',4)" aria-label="Marquer comme fait"></button>
+    <div class="step-num" id="sn4">4</div>
+    <div class="step-body">
+      <div class="step-title">Rédiger l'introduction</div>
+      <div class="step-when">Semaine 4</div>
+      <div class="step-desc">Règle d'or : l'intro se rédige EN DERNIER, une fois que tu sais où tu vas.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-cta">
+  <button class="cta-btn" id="cta-btn" onclick="ctaAction()">Commencer aujourd'hui 🎯</button>
+</div>
+
+<script>
+  const TOTAL = 7;
+  const DAYS_FR = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+  const DAYS_FULL = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function weekKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset * 7);
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay()+6)%7));
+    return mon.getFullYear() + '-W' + String(getWeekNum(mon)).padStart(2,'0');
+  }
+
+  function getWeekNum(d) {
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  }
+
+  function loadData() {
+    try { return JSON.parse(localStorage.getItem('routine_data') || '{}'); } catch(e) { return {}; }
+  }
+
+  function saveData(data) {
+    try { localStorage.setItem('routine_data', JSON.stringify(data)); } catch(e) {}
+  }
+
+  let appData = loadData();
+  if (!appData.days) appData.days = {};
+  if (!appData.steps) appData.steps = {};
+  const today = todayKey();
+  if (!appData.days[today]) appData.days[today] = { done: [], pct: 0 };
+
+  function getTodayDone() { return new Set(appData.days[today].done || []); }
+
+  function updateProgress() {
+    const done = getTodayDone();
+    const count = done.size;
+    const pct = Math.round((count / TOTAL) * 100);
+    document.getElementById('progress-text').textContent = count + ' exercice' + (count > 1 ? 's' : '') + ' fait' + (count > 1 ? 's' : '') + ' aujourd\'hui';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+    appData.days[today].pct = pct;
+    saveData(appData);
+    updateStats();
+  }
+
+  function computeStreak() {
+    const keys = Object.keys(appData.days).sort().reverse();
+    let streak = 0;
+    let best = 0;
+    let cur = 0;
+    const sortedAsc = [...keys].reverse();
+    for (let i = 0; i < sortedAsc.length; i++) {
+      if ((appData.days[sortedAsc[i]].pct || 0) >= 50) cur++;
+      else cur = 0;
+      if (cur > best) best = cur;
+    }
+    // current streak from today backwards
+    const d = new Date();
+    for (let i = 0; i < 365; i++) {
+      const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      if (appData.days[k] && (appData.days[k].pct || 0) >= 50) { streak++; }
+      else if (k !== today) break;
+      d.setDate(d.getDate() - 1);
+    }
+    return { streak, best };
+  }
+
+  function updateStats() {
+    const { streak, best } = computeStreak();
+    const totalDays = Object.values(appData.days).filter(d => (d.pct||0) >= 50).length;
+    const allDays = Object.keys(appData.days).length;
+    const rate = allDays > 0 ? Math.round((totalDays / allDays) * 100) : 0;
+
+    document.getElementById('streak-num').textContent = streak;
+    document.getElementById('total-days-num').textContent = totalDays;
+    document.getElementById('best-streak-num').textContent = best;
+    document.getElementById('streak-big').textContent = streak;
+    document.getElementById('stat-total').textContent = totalDays;
+    document.getElementById('stat-best').textContent = best;
+    document.getElementById('stat-rate').textContent = rate + '%';
+
+    const msgs = ['Continue comme ça !', 'Tu es sur la bonne voie !', 'Impressionnant, continue !', 'Tu cartonne !'];
+    const msg = streak === 0 ? 'Commence aujourd\'hui !' : streak < 3 ? msgs[0] : streak < 7 ? msgs[1] : streak < 14 ? msgs[2] : msgs[3];
+    document.getElementById('streak-msg').textContent = msg;
+
+    renderWeekDots();
+    renderWeeklyChart();
+  }
+
+  function renderWeekDots() {
+    const container = document.getElementById('week-dots');
+    container.innerHTML = '';
+    const d = new Date();
+    const dayOfWeek = d.getDay();
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7));
+
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      const k = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.textContent = DAYS_FR[day.getDay()];
+      const isToday = k === today;
+      const isPast = day < new Date(new Date().setHours(0,0,0,0));
+      const pct = appData.days[k] ? (appData.days[k].pct || 0) : 0;
+      if (isToday) dot.className += pct >= 50 ? ' dot-done' : ' dot-today';
+      else if (isPast) dot.className += pct >= 50 ? ' dot-done' : ' dot-miss';
+      else dot.className += ' dot-future';
+      container.appendChild(dot);
+    }
+  }
+
+  function renderWeeklyChart() {
+    const container = document.getElementById('weekly-chart');
+    container.innerHTML = '';
+    const weeks = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * 7);
+      const mon = new Date(d);
+      mon.setDate(d.getDate() - ((d.getDay()+6)%7));
+      const weekDays = [];
+      for (let j = 0; j < 7; j++) {
+        const dd = new Date(mon);
+        dd.setDate(mon.getDate() + j);
+        const k = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+        weekDays.push(k);
+      }
+      const pcts = weekDays.map(k => appData.days[k] ? (appData.days[k].pct||0) : null);
+      const filled = pcts.filter(p => p !== null);
+      const avg = filled.length > 0 ? Math.round(filled.reduce((a,b)=>a+b,0)/filled.length) : 0;
+      const label = 'S' + (8-i);
+      weeks.push({ avg, label, isCurrent: i === 0 });
+    }
+
+    const maxVal = Math.max(...weeks.map(w=>w.avg), 1);
+    weeks.forEach(w => {
+      const col = document.createElement('div');
+      col.className = 'bar-col';
+      const pct = Math.round((w.avg / 100) * 100);
+      const barH = Math.max(4, Math.round((w.avg / maxVal) * 100));
+      col.innerHTML = `
+        <div style="font-size:9px;color:#999;">${w.avg > 0 ? w.avg+'%' : ''}</div>
+        <div class="bar ${w.avg > 0 ? 'filled' : ''} ${w.isCurrent ? 'today' : ''}" style="height:${barH}px;"></div>
+        <div class="bar-label">${w.label}</div>
+      `;
+      container.appendChild(col);
+    });
+  }
+
+  function toggleEx(id, btn) {
+    const card = document.getElementById(id);
+    const doneSt = getTodayDone();
+    if (doneSt.has(id)) {
+      doneSt.delete(id);
+      btn.classList.remove('checked');
+      card.classList.remove('done');
+    } else {
+      doneSt.add(id);
+      btn.classList.add('checked');
+      card.classList.add('done');
+    }
+    appData.days[today].done = Array.from(doneSt);
+    updateProgress();
+  }
+
+  function toggleStep(checkId, num) {
+    const btn = document.getElementById(checkId);
+    const numEl = document.getElementById('sn' + num);
+    btn.classList.toggle('checked');
+    numEl.classList.toggle('done-step');
+    appData.steps['s'+num] = btn.classList.contains('checked');
+    saveData(appData);
+  }
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    el.classList.add('active');
+    const labels = { semaine: 'Commencer aujourd\'hui 🎯', exercices: 'Lancer le chrono — 15 min !', evolution: 'Voir mes objectifs', memoire: 'Démarrer mon mémoire' };
+    document.getElementById('cta-btn').textContent = labels[name];
+    if (name === 'evolution') { renderWeekDots(); renderWeeklyChart(); }
+  }
+
+  function ctaAction() {
+    const active = document.querySelector('.content.active').id;
+    if (active === 'tab-memoire') alert('Ouvre Claude et écris :\n"Aide-moi à définir mon sujet de mémoire en Marketing / Communication"');
+    else if (active === 'tab-exercices') alert('Choisis 1 exercice et lance le chrono. 15 minutes. Maintenant. 🎯');
+    else if (active === 'tab-evolution') alert('Continue ta routine ! Chaque jour coché = une barre qui grandit sur ta courbe 📈');
+    else alert('Trouve l\'exercice du jour et coche-le quand c\'est fait. Tu peux le faire !');
+  }
+
+  function getDayLabel() {
+    const exLabels = ['Weekend — beau travail cette semaine !','Lundi : structurer ses idées 💡','Mardi : avancer dans son mémoire 📝','Mercredi : travailler sa voix 🎙️','Jeudi : lire et documenter 📚','Vendredi : méthode PREP 🎯','Weekend : pitcher ta soutenance 🚀'];
+    const d = new Date();
+    document.getElementById('today-label').textContent = exLabels[d.getDay()];
+    document.getElementById('today-date').textContent = DAYS_FULL[d.getDay()] + ' ' + d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+  }
+
+  function restoreState() {
+    const doneSt = getTodayDone();
+    doneSt.forEach(id => {
+      const btn = document.querySelector(`#${id} .check-circle`);
+      const card = document.getElementById(id);
+      if (btn) btn.classList.add('checked');
+      if (card) card.classList.add('done');
+    });
+    for (let i = 1; i <= 4; i++) {
+      if (appData.steps['s'+i]) {
+        const btn = document.getElementById('sc'+i);
+        const num = document.getElementById('sn'+i);
+        if (btn) btn.classList.add('checked');
+        if (num) num.classList.add('done-step');
+      }
+    }
+  }
+
+  getDayLabel();
+  restoreState();
+  updateProgress();
+</script>
+</body>
+</html>
